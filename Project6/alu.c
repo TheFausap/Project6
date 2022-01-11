@@ -68,10 +68,10 @@ void alu() {
 	add8(ra, rb, NULL, NULL, &rsum);
 	if (*fi) {
 		printf("Adding flags\n");
-        	//*sf = rsum & 0x80; // contains the bit 7 value
+        *sf = rsum & 0x80; // contains the bit 7 value
                 	           // if signed operation the value
                         	   // will be read as negative
 		*zf = (rsum == 0) ? 1 : 0;
-		//*cf = alu_cf;
+		*cf = alu_cf;
 	}
 }

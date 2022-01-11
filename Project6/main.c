@@ -25,7 +25,7 @@ UC* su;                  // subitraction signal
 UC* eo;                  // sum out signal
 UC* fi;                  // flag signal
                          // if enabled copy back flags from alu.
-UC hlt;		 	 // halt signal. stop execution.
+UC hlt;		 			 // halt signal. stop execution.
 
 UC ra;
 UC rb;
@@ -197,7 +197,7 @@ void microcode() {
 
 void alloc() {
 	cf = malloc(sizeof(char));
-        zf = malloc(sizeof(char));
+    zf = malloc(sizeof(char));
 	sf = malloc(sizeof(char));
 	su = malloc(sizeof(char));
 	eo = malloc(sizeof(char));
@@ -213,7 +213,7 @@ void reset() {
 	*su = 0;
 	*eo = 0;
 	hlt = 0;
-        *fi = 0;
+    *fi = 0;
 	*zf = 0;
 	*sf = 0;
 }
@@ -234,18 +234,18 @@ void t_loadprog() {
 	memory[1]=0x200f;
 	memory[2]=0x300f;
 	memory[3]=0x9000;
-        memory[4]=0xf000;
+    memory[4]=0xf000;
 }
 
 int main(int argc, char** argv) {
-        // power on sequence
+    // power on sequence
 	alloc();
 	reset();
-        // main microcode sequence
+    // main microcode sequence
 	t_loadprog();
 	for (int i=0;i<30;i++) printf("%d: 0x%04x\n",i,memory[i]);
-        while (!hlt) {
-        	microcode();
-        }
+    while (!hlt) {
+		microcode();
+    }
 	return 0;
 }
