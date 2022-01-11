@@ -26,5 +26,8 @@
     <ClInclude Include="alu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
