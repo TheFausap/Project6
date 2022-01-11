@@ -10,13 +10,18 @@ extern US bus;   // cpu bus
 extern UC* cf;   // carry flag
 extern UC* su;   // sub signal
 extern UC* eo;   // sum out signal
+extern UC* sf;   // sign flag
+extern UC* zf;   // zero flag
+extern UC* fi;   // flags will be copied back
 
 extern UC ra;
 extern UC rb;
+
 UC rsum;
+UC* alu_cf;      // local carry flag, visible only in the ALU
 
 UC _xor(UC a, UC b) {
-	if (a = 1) a = 0xf;
+	if (a == 1) a = 0xf;
 	return a ^ b;
 }
 
@@ -53,22 +58,21 @@ void add8(UC a, UC b, UC* cin, UC* cout, UC* bs) {
 
 	add4(a, _xor(*su, b), su, &_c, &_bs);
 	if (cout == NULL)
-		add4(_ah, _xor(*su, _bh), &_c, cf, bs);
+		add4(_ah, _xor(*su, _bh), &_c, alu_cf, bs);
 	else
 		add4(_ah, _xor(*su, _bh), &_c, cout, bs);
 	*bs <<= 4;
 	*bs += _bs;
-	if (*su) {
-		(*bs) ^= 0xffff;
-		(*bs)++;
-	}
 }
 
 void alu() {
-	//UC carryOut = 0;
-
-	add8(3, 9, cf, NULL, &rsum);
-
-	// Last instruction
-	//memcpy(cf, &carryOut, sizeof(UC));
+        alu_cf = malloc(sizeof(char));
+	add8(ra, rb, NULL, NULL, &rsum);
+	if (*fi) {
+        	*sf = rsum & 0x80; // contains the bit 7 value
+                	           // if signed operation the value
+                        	   // will be read as negative
+		*zf = (rsum == 0) ? 1 : 0;
+		memcpy(cf,alu_cf,1);
+	}
 }
