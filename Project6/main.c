@@ -77,7 +77,7 @@ void _RI() {
 	memory[MAR] = bus;
 }
 
-// Instruction register from bus
+// Instruction Register (IR) from bus
 void _II() {
 	IR = bus;
 }
