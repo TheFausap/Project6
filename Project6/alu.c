@@ -6,7 +6,6 @@
 #define US unsigned short
 #define C char
 
-extern US bus;   // cpu bus
 extern UC* cf;   // carry flag
 extern UC* su;   // sub signal
 extern UC* eo;   // sum out signal
@@ -18,7 +17,7 @@ extern UC ra;
 extern UC rb;
 
 UC rsum;
-UC* alu_cf;      // local carry flag, visible only in the ALU
+UC alu_cf;      // local carry flag, visible only in the ALU
 
 UC _xor(UC a, UC b) {
 	if (a == 1) a = 0xf;
@@ -58,7 +57,7 @@ void add8(UC a, UC b, UC* cin, UC* cout, UC* bs) {
 
 	add4(a, _xor(*su, b), su, &_c, &_bs);
 	if (cout == NULL)
-		add4(_ah, _xor(*su, _bh), &_c, alu_cf, bs);
+		add4(_ah, _xor(*su, _bh), &_c, &alu_cf, bs);
 	else
 		add4(_ah, _xor(*su, _bh), &_c, cout, bs);
 	*bs <<= 4;
@@ -66,13 +65,13 @@ void add8(UC a, UC b, UC* cin, UC* cout, UC* bs) {
 }
 
 void alu() {
-        alu_cf = malloc(sizeof(char));
 	add8(ra, rb, NULL, NULL, &rsum);
 	if (*fi) {
-        	*sf = rsum & 0x80; // contains the bit 7 value
+		printf("Adding flags\n");
+        	//*sf = rsum & 0x80; // contains the bit 7 value
                 	           // if signed operation the value
                         	   // will be read as negative
 		*zf = (rsum == 0) ? 1 : 0;
-		memcpy(cf,alu_cf,1);
+		//*cf = alu_cf;
 	}
 }

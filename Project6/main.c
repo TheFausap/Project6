@@ -184,10 +184,10 @@ void microcode() {
 			case 4:
 			switch(_IR) {
 				case 3:
-				_EO(); _AI();
+				_FI(); _EO(); _AI();
 				break;
 				case 5:
-				_SU(); _EO(); _AI();
+				_SU(); _FI(); _EO(); _AI();
 			}
 		}
 	}
@@ -197,6 +197,8 @@ void microcode() {
 
 void alloc() {
 	cf = malloc(sizeof(char));
+        zf = malloc(sizeof(char));
+	sf = malloc(sizeof(char));
 	su = malloc(sizeof(char));
 	eo = malloc(sizeof(char));
 	fi = malloc(sizeof(char));
@@ -212,6 +214,8 @@ void reset() {
 	*eo = 0;
 	hlt = 0;
         *fi = 0;
+	*zf = 0;
+	*sf = 0;
 }
 
 // CONTROL LOGIC UNIT
