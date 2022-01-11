@@ -8,7 +8,7 @@
 #define US unsigned short
 #define C char
 
-US memory[4096] = { 0 }; // 4KB RAM
+US memory[4096] = { 0 }; // 4KB RAM 0x0 - 0x1000
 US MAR = 0;              // memory address register
                          // only 12 bit used
 US IR = 0;               // instruction register
@@ -39,12 +39,12 @@ void _J() {
 
 // register B from bus
 void _BI() {
-	rb = bus;
+	rb = (UC) bus;
 }
 
 // register A from bus
 void _AI() {
-	ra = bus;
+	ra = (UC) bus;
 }
 
 //register A to bus
@@ -128,67 +128,69 @@ void microcode() {
 	for (char t=0;t<5;t++) {
 		switch(t) {
 			case 0:
-			_CO(); _MI();
-			break;
+				_CO(); _MI();
+				break;
 			case 1:
-			_RO(); _II(); _CE();
-			_IR = IR >> 12;
-			break;
+				_RO(); _II(); _CE();
+				_IR = IR >> 12;  // GET OPC FROM IR
+				break;
 			case 2:
-			// GET OPC FROM IR
-			switch(_IR) {
-				case 15: //HLT
-				_H();
-				break;
-				case 1:  //LA
-				case 2:  //SA
-				case 3:  //ADD
-				case 5:  //SUB
-				_IO(); _MI();
-				break;
-				case 8:  //LI
-				_IO(); _AI();
-				break;
-				case 4:  //JMP
-				_RO(); _J();
-				break;
-				case 6:  //JZ
-				if (*zf) {
-					_RO(); _J();
+				switch(_IR) {
+					case 15: //HLT
+						_H();
+						break;
+					case 1:  //LA
+					case 2:  //SA
+					case 3:  //ADD
+					case 5:  //SUB
+						_IO(); _MI();
+						break;
+					case 8:  //LI
+						_IO(); _AI();
+						break;
+					case 4:  //JMP
+						_RO(); _J();
+						break;
+					case 6:  //JZ
+						if (*zf) {
+							_RO(); _J();
+						}
+						break;
+					case 7:  //JC
+						if (*cf) {
+							_RO(); _J();
+						}
+						break;
+					case 9:  //OUT
+						_AO(); _OI();
+						break;
+					case 10: //CMP
+						_SU(); _FI(); _EO();
+						break;
 				}
 				break;
-				case 7:  //JC
-				if (*cf) {
-					_RO(); _J();
-				}
-				break;
-				case 9:  //OUT
-				_AO(); _OI();
-				break;
-			}
-			break;
 			case 3:
-			switch(_IR) {
-				case 1:
-				_RO(); _AI();
+				switch(_IR) {
+					case 1:
+						_RO(); _AI();
+						break;
+					case 2:
+						_AO(); _RI();
+						break;
+					case 3:
+					case 5:
+						_RO(); _BI();
+						break;
+				}
 				break;
-				case 2:
-				_AO(); _RI();
-				break;
-				case 3:
-				case 5:
-				_RO(); _BI();
-				break;
-			}
-			break;
 			case 4:
-			switch(_IR) {
-				case 3:
-				_FI(); _EO(); _AI();
-				break;
-				case 5:
-				_SU(); _FI(); _EO(); _AI();
-			}
+				switch(_IR) {
+					case 3:
+						_FI(); _EO(); _AI();
+						break;
+					case 5:
+						_SU(); _FI(); _EO(); _AI();
+				}
 		}
 	}
 }	
