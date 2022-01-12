@@ -46,12 +46,12 @@ void _J() {
 
 // register B from bus
 void _BI() {
-	rb = (UC) bus;
+	rb = bus;
 }
 
 // register A from bus
 void _AI() {
-	ra = (UC) bus;
+	ra = bus;
 }
 
 //register A to bus
@@ -86,7 +86,7 @@ void _RI() {
 
 // Instruction Register (IR) from bus
 void _II() {
-	IR = bus;
+	IR = (UI) bus;
 }
 
 // IR [only the address part] to bus
@@ -240,11 +240,11 @@ void clu() {
 
 // load some test program into memory
 void t_loadprog() {
-	memory[0]=0x800a;
-	memory[1]=0x200f;
-	memory[2]=0x300f;
-	memory[3]=0x9000;
-    memory[4]=0xf000;
+	memory[0]=0xa8;
+	memory[1]=0xf2;
+	memory[2]=0xf3;
+	memory[3]=0x9;
+    memory[4]=0xf;
 }
 
 int main(int argc, char** argv) {
@@ -253,9 +253,11 @@ int main(int argc, char** argv) {
 	reset();
     // main microcode sequence
 	t_loadprog();
-	for (int i=0;i<30;i++) printf("%d: 0x%04x\n",i,memory[i]);
+	for (int i = 0; i < 30; i++) printf("0x%04x: 0x%04x\n", i, memory[i]);
     while (!hlt) {
 		microcode();
     }
+	printf("\n");
+	for (int i = 0; i < 30; i++) printf("0x%04x: 0x%04x\n", i, memory[i]);
 	return 0;
 }

@@ -66,8 +66,8 @@ void add8(UC a, UC b, UC* cin, UC* cout, UC* bs) {
 
 void add16(US a, US b, UC* cin, UC* cout, US* bs16) {
 	/*UC v = 0;*/
-	/*UC _ah = a;
-	UC _bh = b;*/
+	UC _ah = a;
+	UC _bh = b;
 	UC _c = 0;
 	UC _bs16 = 0;
 
