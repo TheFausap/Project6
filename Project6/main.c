@@ -228,16 +228,6 @@ void reset() {
 	*sf = 0;
 }
 
-// CONTROL LOGIC UNIT
-
-void clu() {
-	UC opc = 0;
-	UC opr = 0;
-
-	opc = IR & 0xf000;
-	opr = IR & 0x0fff;
-}
-
 // load some test program into memory
 void t_loadprog() {
 	memory[0]=0xa8;
