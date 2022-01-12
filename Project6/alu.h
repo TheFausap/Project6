@@ -2,6 +2,6 @@
 #define ALU
 
 void alu(void);
-extern unsigned char rsum;
+extern unsigned short rsum;
 
 #endif // !ALU

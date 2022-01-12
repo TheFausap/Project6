@@ -104,7 +104,7 @@ void _EO() {
 // Print on the screen the value on the bus
 // It uses decimal format
 void _OI() {
-	printf("\nOUTPUT: %d\n",bus);
+	printf("\nOUTPUT: %ld\n",bus);
 }
 
 // Flag will be copied
@@ -151,6 +151,7 @@ void microcode() {
 					case 2:  //SA  M
 					case 3:  //ADD M
 					case 5:  //SUB M
+					case 10: //CMP
 						_IO(); _MI();
 						break;
 					case 8:  //LI $N
@@ -171,9 +172,6 @@ void microcode() {
 						break;
 					case 9:  //OUT
 						_AO(); _OI();
-						break;
-					case 10: //CMP
-						_SU(); _FI(); _EO();
 						break;
 				}
 				break;
@@ -198,6 +196,10 @@ void microcode() {
 						break;
 					case 5:
 						_SU(); _FI(); _EO(); _AI();
+						break;
+					case 10: 
+						_SU(); _FI(); _EO();
+						break;
 				}
 		}
 	}
@@ -230,11 +232,13 @@ void reset() {
 
 // load some test program into memory
 void t_loadprog() {
-	memory[0]=0xa8;
-	memory[1]=0xf2;
-	memory[2]=0xf3;
-	memory[3]=0x9;
-    memory[4]=0xf;
+	memory[0] = 0xa8;
+	memory[1] = 0xf2;
+	memory[2] = 0xf3;
+	memory[3] = 0x9;
+	memory[4] = 0x67;
+	memory[5] = 0x24;
+    memory[6] = 0xf;
 }
 
 int main(int argc, char** argv) {
