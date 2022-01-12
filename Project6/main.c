@@ -1,16 +1,58 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef LINUX
+#include <time.h>
+#else
+#include <windows.h>    /* WinAPI */
+#endif
+
 #include "alu.h"
-#include "cw.h"
+// #include "cw.h"
 
 #define UC unsigned char
 #define US unsigned short
 #define UI unsigned int
 #define C char
 
-US memory[65535] = { 0 }; // 64KB RAM 0x0 - 0xFFFF
+// 1MHz -> 1000 ns
+// For Windows minimal unit is 100 ns
+#define FREQ 1    // 10MHz
+
+// Define a sort of timing in the microcode
+#ifdef LINUX
+struct timespec ts;
+#else
+/* Windows sleep in 100ns units */
+void nanosleep(LONGLONG ns) {
+	HANDLE timer;		/* Timer handle */
+	LARGE_INTEGER li;   /* Time defintion */
+	
+						/* Create timer */
+	if (!(timer = CreateWaitableTimer(NULL, TRUE, NULL)))
+		return FALSE;
+	
+	/* Set timer properties */
+	li.QuadPart = -ns;
+	if (!SetWaitableTimer(timer, &li, 0, NULL, NULL, FALSE)) {
+		CloseHandle(timer);
+		return FALSE;
+	}
+	
+	/* Start & wait for timer */
+	WaitForSingleObject(timer, INFINITE);
+	
+	/* Clean resources */
+	CloseHandle(timer);
+}
+#endif
+
+US memory[65535] = { 0 }; // 64KB RAM 0x0000 - 0xFFFF
+						  // STACK    0x0000 - 0x0800
+						  // P+D      0x1000 - 0xFFFF
 US MAR = 0;               // memory address register
+US TOS = 0x0800;
+US BOS = 0;
 // IR FORMAT (32 bit reg)
 // 
 // F                0
@@ -39,85 +81,95 @@ US rb;                   // Register B - 16 bit
 
 // MICROCODE INSTRUCTIONS
 
+void PUSH() {
+	TOS -= 1;
+	memory[TOS] = bus;
+}
+
+void POP() {
+	bus = memory[TOS];
+	TOS += 1;
+}
+
 // Load PC from bus
-void _J() {
+void J() {
 	pc = bus;
 }
 
 // register B from bus
-void _BI() {
+void BI() {
 	rb = bus;
 }
 
 // register A from bus
-void _AI() {
+void AI() {
 	ra = bus;
 }
 
 //register A to bus
-void _AO() {
+void AO() {
 	bus = ra;
 }
 
 // PC to bus
-void _CO() {
+void CO() {
 	bus = pc;
 }
 
 // Increment PC
-void _CE() {
+void CE() {
 	pc++;
 }
 
 // MAR from bus
-void _MI() {
+void MI() {
 	MAR = bus;
 }
 
 // content of MAR to bus
-void _RO() {
+void RO() {
 	bus = memory[MAR];
 }
 
 // content of bus into memory
-void _RI() {
+void RI() {
 	memory[MAR] = bus;
 }
 
 // Instruction Register (IR) from bus
-void _II() {
+void II() {
 	IR = (UI) bus;
 }
 
 // IR [only the address part] to bus
 // UNUSED
-void _IO() {
+void IO() {
 	bus = IR >> 4;
 }
 
 // Arithmetic result to bus (RSUM)
-void _EO() {
+void EO() {
 	alu();
 	bus = rsum;
 }
 
 // Print on the screen the value on the bus
 // It uses decimal format
-void _OI() {
+void OI() {
 	printf("\nOUTPUT: %ld\n",bus);
 }
 
 // Flag will be copied
-void _FI() {
+void FI() {
 	*fi = 1;
 }
 
 // Enabled will perform a subtraction
-void _SU() {
+void SU() {
 	*su = 1;
 }
 
-void _H() {
+void H() {
 	hlt = 1;
 }
 
@@ -136,72 +188,98 @@ void microcode() {
 	for (char t=0;t<5;t++) {
 		switch(t) {
 			case 0:
-				_CO(); _MI();
+				CO(); MI();
 				break;
 			case 1:
-				_RO(); _II(); _CE();
+				RO(); II(); CE();
 				_IR = IR & 0xf;  // GET OPC FROM IR
 				break;
 			case 2:
 				switch(_IR) {
 					case 15: //HLT
-						_H();
+						H();
 						break;
 					case 1:  //LA  M
 					case 2:  //SA  M
 					case 3:  //ADD M
 					case 5:  //SUB M
-					case 10: //CMP
-						_IO(); _MI();
+					case 10: //CMP M
+						IO(); MI();
 						break;
 					case 8:  //LI $N
-						_IO(); _AI();
+						IO(); AI();
 						break;
 					case 4:  //JMP M
-						_IO(); _J();
+						IO(); J();
 						break;
 					case 6:  //JZ  M
 						if (*zf) {
-							_IO(); _J();
+							IO(); J();
 						}
 						break;
 					case 7:  //JC  M
 						if (*cf) {
-							_IO(); _J();
+							IO(); J();
 						}
 						break;
 					case 9:  //OUT
-						_AO(); _OI();
+						AO(); OI();
+						break;
+					case 11: //ADD #N
+						IO(); BI();
+						break;
+					case 12: //SUB #N
+						IO(); BI();
+						break;
+					case 13: //JSR M
+						CO(); PUSH();
+						break;
+					case 14: //RTC
+						POP(); J();
 						break;
 				}
 				break;
 			case 3:
 				switch(_IR) {
 					case 1:
-						_RO(); _AI();
+						RO(); AI();
 						break;
 					case 2:
-						_AO(); _RI();
+						AO(); RI();
 						break;
 					case 3:
 					case 5:
-						_RO(); _BI();
+						RO(); BI();
+						break;
+					case 11:
+						FI(); EO(); AI();
+						break;
+					case 12:
+						FI(); SU(); EO(); AI();
+						break;
+					case 13:
+						IO(); J();
 						break;
 				}
 				break;
 			case 4:
 				switch(_IR) {
 					case 3:
-						_FI(); _EO(); _AI();
+						FI(); EO(); AI();
 						break;
 					case 5:
-						_SU(); _FI(); _EO(); _AI();
+						SU(); FI(); EO(); AI();
 						break;
 					case 10: 
-						_SU(); _FI(); _EO();
+						SU(); FI(); EO();
 						break;
 				}
 		}
+#ifdef LINUX
+		nanosleep(&ts);
+#else
+		nanosleep(FREQ);
+#endif
 	}
 }	
 
@@ -214,6 +292,11 @@ void alloc() {
 	su = malloc(sizeof(char));
 	eo = malloc(sizeof(char));
 	fi = malloc(sizeof(char));
+
+#ifdef LINUX
+	ts.tv_sec = 0;
+	ts.tv_nsec = FREQ;
+#endif
 }
 
 void reset() {
