@@ -8,12 +8,17 @@
 #define US unsigned short
 #define C char
 
-US memory[4096] = { 0 }; // 4KB RAM 0x0 - 0x1000
-US MAR = 0;              // memory address register
-                         // only 12 bit used
+UC memory[65535] = { 0 }; // 64KB RAM 0x0 - 0xFFFF
+US MAR = 0;               // memory address register
+// IR FORMAT
+// 
+// F                0
+// +----------------+
+// |############OOOO|
+// +----------------+
 US IR = 0;               // instruction register
                          // 4bit opcode
-                         // 12bit memory address
+                         // 12bit for immediate
 US pc = 0;
 US bus = 0; 
 
@@ -27,8 +32,8 @@ UC* fi;                  // flag signal
                          // if enabled copy back flags from alu.
 UC hlt;		 			 // halt signal. stop execution.
 
-UC ra;
-UC rb;
+UC ra;                   // Register A - 8 bit
+UC rb;                   // Register B - 8 bit
 
 // MICROCODE INSTRUCTIONS
 
@@ -83,6 +88,7 @@ void _II() {
 }
 
 // IR [only the address part] to bus
+// UNUSED
 void _IO() {
 	bus = IR & 0xfff;
 }
@@ -132,31 +138,31 @@ void microcode() {
 				break;
 			case 1:
 				_RO(); _II(); _CE();
-				_IR = IR >> 12;  // GET OPC FROM IR
+				_IR = IR & 0xf;  // GET OPC FROM IR
 				break;
 			case 2:
 				switch(_IR) {
 					case 15: //HLT
 						_H();
 						break;
-					case 1:  //LA
-					case 2:  //SA
-					case 3:  //ADD
-					case 5:  //SUB
+					case 1:  //LA  M
+					case 2:  //SA  M
+					case 3:  //ADD M
+					case 5:  //SUB M
 						_IO(); _MI();
 						break;
-					case 8:  //LI
+					case 8:  //LI $N
 						_IO(); _AI();
 						break;
-					case 4:  //JMP
+					case 4:  //JMP M
 						_RO(); _J();
 						break;
-					case 6:  //JZ
+					case 6:  //JZ  M
 						if (*zf) {
 							_RO(); _J();
 						}
 						break;
-					case 7:  //JC
+					case 7:  //JC  M
 						if (*cf) {
 							_RO(); _J();
 						}
