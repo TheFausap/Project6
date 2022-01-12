@@ -16,7 +16,7 @@ extern UC* fi;   // flags will be copied back
 extern UC ra;
 extern UC rb;
 
-UC rsum;
+US rsum;
 UC alu_cf;      // local carry flag, visible only in the ALU
 
 UC _xor(UC a, UC b) {
@@ -64,10 +64,31 @@ void add8(UC a, UC b, UC* cin, UC* cout, UC* bs) {
 	*bs += _bs;
 }
 
+void add16(US a, US b, UC* cin, UC* cout, US* bs16) {
+	/*UC v = 0;*/
+	/*UC _ah = a;
+	UC _bh = b;*/
+	UC _c = 0;
+	UC _bs16 = 0;
+
+	/*_flto(0xf0, &a);
+	_flto(0xf0, &b);
+	_flto(0xf, &_ah);
+	_flto(0xf, &_bh);*/
+
+	add8(a, _xor(*su, b), su, &_c, &_bs16);
+	if (cout == NULL)
+		add8(_ah, _xor(*su, _bh), &_c, &alu_cf, (UC*) bs16);
+	else
+		add8(_ah, _xor(*su, _bh), &_c, cout, (UC*) bs16);
+	*bs16 <<= 8;
+	*bs16 += _bs16;
+}
+
 void alu() {
-	add8(ra, rb, NULL, NULL, &rsum);
+	//add8(ra, rb, NULL, NULL, &rsum);
+	add16(ra, rb, NULL, NULL, &rsum);
 	if (*fi) {
-		printf("Adding flags\n");
         *sf = rsum & 0x80; // contains the bit 7 value
                 	           // if signed operation the value
                         	   // will be read as negative

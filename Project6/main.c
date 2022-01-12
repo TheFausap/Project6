@@ -6,19 +6,21 @@
 
 #define UC unsigned char
 #define US unsigned short
+#define UI unsigned int
 #define C char
 
-UC memory[65535] = { 0 }; // 64KB RAM 0x0 - 0xFFFF
+US memory[65535] = { 0 }; // 64KB RAM 0x0 - 0xFFFF
 US MAR = 0;               // memory address register
-// IR FORMAT
+// IR FORMAT (32 bit reg)
 // 
 // F                0
-// +----------------+
-// |############OOOO|
-// +----------------+
-US IR = 0;               // instruction register
+// +---------------------------------+
+// |XXXXXXXXXXXXXXX##############OOOO|
+// +---------------------------------+
+UI IR = 0;               // instruction register
                          // 4bit opcode
-                         // 12bit for immediate
+                         // 16bit for immediate or memory address
+						 // remaining bits unused
 US pc = 0;
 US bus = 0; 
 
@@ -32,8 +34,8 @@ UC* fi;                  // flag signal
                          // if enabled copy back flags from alu.
 UC hlt;		 			 // halt signal. stop execution.
 
-UC ra;                   // Register A - 8 bit
-UC rb;                   // Register B - 8 bit
+US ra;                   // Register A - 16 bit
+US rb;                   // Register B - 16 bit
 
 // MICROCODE INSTRUCTIONS
 
@@ -90,7 +92,7 @@ void _II() {
 // IR [only the address part] to bus
 // UNUSED
 void _IO() {
-	bus = IR & 0xfff;
+	bus = IR >> 4;
 }
 
 // Arithmetic result to bus (RSUM)
@@ -155,16 +157,16 @@ void microcode() {
 						_IO(); _AI();
 						break;
 					case 4:  //JMP M
-						_RO(); _J();
+						_IO(); _J();
 						break;
 					case 6:  //JZ  M
 						if (*zf) {
-							_RO(); _J();
+							_IO(); _J();
 						}
 						break;
 					case 7:  //JC  M
 						if (*cf) {
-							_RO(); _J();
+							_IO(); _J();
 						}
 						break;
 					case 9:  //OUT
