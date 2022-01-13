@@ -10,3 +10,5 @@ Anyway the system seems quite stable and capable to perform some operations.
 
 Next step will be adding more instructions to simulate the vast richness in instructions of 6502 CPU, and simulate the EEPROM behaviour writing the microcode 
 and the ALU operations.
+
+Also an assembler is required, when everythin will be settled up.
