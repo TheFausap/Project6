@@ -28,7 +28,7 @@ void nanosleep(LONGLONG ns) {
 	HANDLE timer;		/* Timer handle */
 	LARGE_INTEGER li;   /* Time defintion */
 	
-						/* Create timer */
+	/* Create timer */
 	if (!(timer = CreateWaitableTimer(NULL, TRUE, NULL)))
 		return FALSE;
 	
@@ -83,6 +83,10 @@ US rb;                   // Register B - 16 bit
 
 void PUSH() {
 	TOS -= 1;
+	if (TOS < BOS) {
+		printf("FATAL CPU ERROR: Stack full!\n");
+		exit(-200);
+	}
 	memory[TOS] = bus;
 }
 
@@ -144,7 +148,7 @@ void II() {
 // IR [only the address part] to bus
 // UNUSED
 void IO() {
-	bus = IR >> 4;
+	bus = IR >> 5;
 }
 
 // Arithmetic result to bus (RSUM)
@@ -183,6 +187,13 @@ void microcode() {
 // |L|I|I|O|O|I|I|O|O|U|I|I|E|O| |I|
 // |T| | | | | | | | | | | | | | | |
 // +-------------------------------+
+//
+// IR
+// 2                                 0
+// 0                                 0
+// +---------------------------------+
+// |XXXXXXXXXXXXXX##############OOOOO|
+// +---------------------------------+
 	US _IR = 0;
 
 	for (char t=0;t<5;t++) {
@@ -192,7 +203,7 @@ void microcode() {
 				break;
 			case 1:
 				RO(); II(); CE();
-				_IR = IR & 0xf;  // GET OPC FROM IR
+				_IR = IR & 0x1f;  // GET OPC FROM IR
 				break;
 			case 2:
 				switch(_IR) {
